@@ -1,10 +1,9 @@
 <?php
 
 require_once 'EstadoFinal.php';
-
-class Automato {
-
-
+require_once 'TiposErrosAutomato.php';
+class Automato 
+{
     /** @var string[] */
     private array  $alfabeto;
 
@@ -84,50 +83,112 @@ class Automato {
 
     private function validarAtributos() : void
     {
+        $this->validarEstadoInicialContidoEstados();
+        $this->validarEstadosFinais();
+        $this->validarTransicoesDelta();
+    }
+
+    private function validarEstadoInicialContidoEstados() : void 
+    {
         if(!$this->estadoInicialContidoEstados()) {
-            throw new Exception("Estado Inicial não pertence aos x'estados informados.");
+            throw new Exception("Estado Inicial não pertence aos estados informados.", TiposErrosAutomato::ESTADO_INICIAL_IMPREVISTO->value);
         }
     }
 
     private function estadoInicialContidoEstados() : bool
     {
-        return in_array($this->getEstadoInicial(), this)
+        return in_array($this->getEstadoInicial(), $this->getEstados());
+    }
+
+    private function validarEstadosFinais() : void
+    {
+        foreach ($this->getEstadosFinais() as $estadoFinal) {
+            if(!$this->estadoPertenceEstados($estadoFinal->getEstado())) {
+                throw new Exception("Estado final '{$estadoFinal->getEstado()}' não pertence aos estados informados.", TiposErrosAutomato::ESTADO_FINAL_IMPREVISTO->value);
+            }
+        }
+    }
+
+    private function validarTransicoesDelta() : void
+    {
+        foreach ($this->getDelta() as $estadoAtual => $transicoes) {
+            foreach($transicoes as $entrada => $estado) {
+
+                $funcaoTransicao = "'{$estado} = δ({$estadoAtual}, {$entrada})'";
+
+                if(!$this->estadoPertenceEstados($estadoAtual)) {
+                    throw new Exception("Função de transição {$funcaoTransicao} inválida, o estado atual '{$estadoAtual}' não pertence aos estados informados.", TiposErrosAutomato::DELTA_ESTADO_ATUAL_IMPREVISTO->value);
+                }
+
+                if(!$this->entradaPertenceAlfabeto($entrada)) {
+                    throw new Exception("Função de transição {$funcaoTransicao} inválida, a entrada '{$entrada}' não pertence ao alfabeto.", TiposErrosAutomato::DELTA_ENTRADA_IMPREVISTA->value);
+                }
+
+                if(!$this->estadoPertenceEstados($estado)) {
+                    throw new Exception("Função de transição {$funcaoTransicao} inválida, o estado resultante '{$estado}' não pertence aos estados informados.", TiposErrosAutomato::DELTA_ESTADO_RESULTANTE_IMPREVISTO->value);
+                }
+            }
+        }
+    }
+
+    private function entradaPertenceAlfabeto(string $entrada) : bool 
+    {
+        return in_array($entrada, $this->getAlfabeto());
+    }
+
+    private function estadoPertenceEstados(string $estado) : bool
+    {
+        return in_array($estado, $this->getEstados());
     }
 
     public function getEstadoFinal(string $entrada) : string
     {
+
+        $this->validarCaracteresEntradaPertencemAlfabeto($entrada);
+
         $estado = $this->getEstadoInicial();
 
 
         $caracteres = str_split($entrada);
 
         foreach ($caracteres as $caracter) {
-            if(!in_array($caracter, $this->getAlfabeto())) {
-                throw new Exception("Entrada contém caracteres não contidos no alfabeto. Caracter: {$caracter}"); 
-            }
-            
+            $this->validarTransicaoExiste($estado, $caracter);
             $estado = $this->getDelta()[$estado][$caracter];
         }
-
 
         return $estado;
     }
 
-    public function getTipoEntrada($entrada) : string 
+    private function validarCaracteresEntradaPertencemAlfabeto($entrada) : void
+    {
+        foreach(str_split($entrada) as $caracter) {
+            if(!in_array($caracter, $this->getAlfabeto())) {
+                throw new Exception("Entrada contém caracteres não contidos no alfabeto. Caracter: {$caracter}", TiposErrosAutomato::CARACTER_ENTRADA_NAO_PERTENCE_ALFABETO->value);
+            }
+        }
+    }
+
+    private function validarTransicaoExiste(string $estadoAtual, string $caracter) : void 
+    {
+        if(!isset($this->getDelta()[$estadoAtual][$caracter])) {
+            throw new Exception("Função de transição δ({$estadoAtual}, {$caracter}) não foi prevista", TiposErrosAutomato::TRANSICAO_INEXISTENTE_ESTADO_CARACTER_ATUAL->value);
+        }
+    }
+
+    public function getTipoEntrada(string $entrada) : string 
     {
         $estadoFinal = $this->getEstadoFinal($entrada);
 
-        
         foreach ($this->getEstadosFinais() as $estado) {
             if($estadoFinal === $estado->getEstado()) {
                 return $estado->getTipo();
             }
         }
         
-        throw new Exception("Entrada Inválida.");
+        throw new Exception("Nenhum tipo de entrada encontrado.", TiposErrosAutomato::ESTADO_FINAL_INEXISTENTE_PARA_ENTRADA->value);
     }
 
-    public static function getCarateresParaEstado(string $estado, array $caracteres) : array 
+    public static function getCarateresParaEstado(array $caracteres, string $estado) : array 
     {
         $caracteresParaEstado = [];
 
@@ -138,7 +199,7 @@ class Automato {
         return $caracteresParaEstado;
     }
 
-    public static function getLetras(array $caracteresExcluir = []) : array
+    public static function getLetrasMinusculas(array $caracteresExcluir = []) : array
     {
         $letras = [
             'a', 'b', 'c', 'd', 'e',
@@ -150,6 +211,22 @@ class Automato {
         ];
 
         return array_diff($letras, $caracteresExcluir);
+    }
+
+    public static function getLetrasMaiusculas(array $caracteresExcluir = []) : array
+    {
+        return array_diff(array_map(function($letra) {return strtoupper($letra);}, self::getLetrasMinusculas()), $caracteresExcluir);
+    }
+
+    public static function getLetras(array $caracteresExcluir = [], bool $caseSensitive = true) {
+
+        if(!$caseSensitive) {
+            $caracteresExcluir = array_map(function($caracter) {return strtoupper($caracter);}, $caracteresExcluir);
+        }
+
+        return array_filter(array_merge(self::getLetrasMinusculas(), self::getLetrasMaiusculas()), function($letra) use($caracteresExcluir, $caseSensitive) {
+            return !in_array($caseSensitive ? $letra : strtoupper($letra), $caracteresExcluir);
+        });
     }
 
     public static function getNumeros(array $caracteresExcluir = []) : array

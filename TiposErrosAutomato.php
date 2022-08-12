@@ -1,0 +1,17 @@
+<?php
+
+enum TiposErrosAutomato : int {
+    case ESTADO_INICIAL_IMPREVISTO          = 1;
+
+    case ESTADO_FINAL_IMPREVISTO            = 2;
+
+    case DELTA_ESTADO_ATUAL_IMPREVISTO      = 3;
+    case DELTA_ENTRADA_IMPREVISTA           = 4;
+    case DELTA_ESTADO_RESULTANTE_IMPREVISTO = 5;
+    
+    case CARACTER_ENTRADA_NAO_PERTENCE_ALFABETO = 6;
+
+    case TRANSICAO_INEXISTENTE_ESTADO_CARACTER_ATUAL = 7;
+
+    case ESTADO_FINAL_INEXISTENTE_PARA_ENTRADA = 8;
+}
