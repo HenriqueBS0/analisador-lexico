@@ -1,4 +1,14 @@
 <?php
+echo "<pre>";
+var_dump(str_split("x = 10
+WHILE (x > 0){
+   PRINT(x)
+   X = x - 1
+}
+IF (x == 0)
+   PRINT(0)"));
+
+die;
 
 require_once 'Automato.php';
 
@@ -107,24 +117,8 @@ $estadosFinais = [
 
 try {
     $automato = new Automato($alfabeto, $estados, $estadoInicial, $estadosFinais, $delta);
-    echo $automato->getTipoEntrada('variavel') . '<br>';
-    echo $automato->getTipoEntrada('IF') . '<br>';
-    echo $automato->getTipoEntrada('FOR') . '<br>';
-    echo $automato->getTipoEntrada('PRINT') . '<br>';
-    echo $automato->getTipoEntrada('11') . '<br>';
-    echo $automato->getTipoEntrada('>') . '<br>';
-    echo $automato->getTipoEntrada('<') . '<br>';
-    echo $automato->getTipoEntrada('(') . '<br>';
-    echo $automato->getTipoEntrada(')') . '<br>';
-    echo $automato->getTipoEntrada('{') . '<br>';
-    echo $automato->getTipoEntrada('}') . '<br>';
-    echo $automato->getTipoEntrada('-') . '<br>';
-    echo $automato->getTipoEntrada('+') . '<br>';
-    echo $automato->getTipoEntrada('*') . '<br>';
-    echo $automato->getTipoEntrada('/') . '<br>';
-    echo $automato->getTipoEntrada('=') . '<br>';
-    echo $automato->getTipoEntrada('==') . '<br>';
-    echo $automato->getTipoEntrada('!=') . '<br>';
+    $analisador = new AnalisadorLexico($automato);
+    var_dump($analisador->getTokensEntrada(""));
 } catch (Exception $ex) {
     echo $ex->getMessage();
 }

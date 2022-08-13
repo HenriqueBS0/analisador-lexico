@@ -148,7 +148,6 @@ class Automato
 
         $estado = $this->getEstadoInicial();
 
-
         $caracteres = str_split($entrada);
 
         foreach ($caracteres as $caracter) {
