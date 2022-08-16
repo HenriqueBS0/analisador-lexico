@@ -1,16 +1,6 @@
 <?php
-echo "<pre>";
-var_dump(str_split("x = 10
-WHILE (x > 0){
-   PRINT(x)
-   X = x - 1
-}
-IF (x == 0)
-   PRINT(0)"));
 
-die;
-
-require_once 'Automato.php';
+require_once 'AnalisadorLexico.php';
 
 $alfabeto = array_merge(Automato::getLetras(), Automato::getNumeros(), ['<', '>', '(', ')', '{', '}', '-', '+', '*', '/', '=', '!', ' ', PHP_EOL]);
 
@@ -100,25 +90,38 @@ $estadosFinais = [
     new EstadoFinal('FOR',              'FOR'),
     new EstadoFinal('PRINT',            'PRINT'),
     new EstadoFinal('CONSTANTE',        'Constante'),
-    new EstadoFinal('MAIOR',            '>'),
-    new EstadoFinal('MENOR',            '<'),
-    new EstadoFinal('ABRE-PARENTESES',  '('),
-    new EstadoFinal('FECHA-PARENTESES', ')'),
-    new EstadoFinal('ABRE-CHAVES',      '{'),
-    new EstadoFinal('FECHA-CHAVES',     '}'),
-    new EstadoFinal('MENOS',            '-'),
-    new EstadoFinal('MAIS',             '+'),
-    new EstadoFinal('MULTIPLICA',       '*'),
-    new EstadoFinal('DIVIDE',           '/'),
-    new EstadoFinal('RECEBE',           '='),
-    new EstadoFinal('IGUALDADE',        '=='),
-    new EstadoFinal('DESIGUALDADE',     '!='),
+    new EstadoFinal('MAIOR',            'Maior'),
+    new EstadoFinal('MENOR',            'Menor'),
+    new EstadoFinal('ABRE-PARENTESES',  'Abre Parenteses'),
+    new EstadoFinal('FECHA-PARENTESES', 'Fecha Parenteses'),
+    new EstadoFinal('ABRE-CHAVES',      'Abre Chaves'),
+    new EstadoFinal('FECHA-CHAVES',     'Fecha Chaves'),
+    new EstadoFinal('MENOS',            'Menos'),
+    new EstadoFinal('MAIS',             'Mais'),
+    new EstadoFinal('MULTIPLICA',       'Multiplica'),
+    new EstadoFinal('DIVIDE',           'Divide'),
+    new EstadoFinal('RECEBE',           'Recebe'),
+    new EstadoFinal('IGUALDADE',        'Igualdade'),
+    new EstadoFinal('DESIGUALDADE',     'Desigualdade'),
 ];
 
 try {
     $automato = new Automato($alfabeto, $estados, $estadoInicial, $estadosFinais, $delta);
     $analisador = new AnalisadorLexico($automato);
-    var_dump($analisador->getTokensEntrada(""));
+    $entrada = implode(PHP_EOL, [
+        "x = 10",
+        "WHILE (x > 0){",
+    ]);
+
+    $entrada = "x = 10
+    WHILE (x > 0){
+       PRINT(x)
+       X = x - 1
+    }
+    IF (x == 0)
+       PRINT(0)";
+
+    var_dump($analisador->getTokensEntrada($entrada));
 } catch (Exception $ex) {
     echo $ex->getMessage();
-}
+} 

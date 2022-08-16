@@ -1,6 +1,8 @@
 <?php
 
 require_once 'Automato.php';
+require_once 'ControladorLinhas.php';
+require_once 'Token.php';
 
 class AnalisadorLexico {
     private Automato $automato;
@@ -21,48 +23,73 @@ class AnalisadorLexico {
     public function getTokensEntrada(string $entrada) : array
     {
         $tokens = [];
+        $token = null;
 
-        $posicaoAtual = 0;
-        
-        $posicaoInicialLeitura = 0;
+        $controladorLinhas = new ControladorLinhas($entrada);
 
-        $ultimoTokenValidoEncontrado = null;
+        $caracteres             = str_split($entrada);
+        $posicaoCaracterAtual   = 1;
+        $posicaoCaracterInicial = 1;
+        $posicaoCaracterFinal = count($caracteres);
 
-        $linha = 1;
-
-        $caracteres = str_split($entrada);
-
-        for($posicao = $posicaoInicialLeitura; $posicao < count($caracteres); $posicao++) {
-
-            $caracterAtual = $caracteres[$posicao];
-
-            if($caracterAtual === PHP_EOL) {
-                $linha++;
-            }
-
-            $entrada = self::getStringFromParteArray($caracteres, $posicaoInicialLeitura, $posicao);
+        do {
+            $pedacoEntrada = self::getStringFromParteArray($caracteres, $posicaoCaracterInicial, $posicaoCaracterAtual);
 
             try {
-                $ultimoTokenValidoEncontrado = new Token(
-                    $this->getAutomato()->getEstadoFinal($entrada),
-                    $entrada,
-                    $posicaoInicialLeitura,
-                    $posicao,
-                    $linha
-                );
-            } catch (Exception $ex) {
-                if($ex->getCode()) {
+                $linha = $controladorLinhas->getLinha($posicaoCaracterInicial, $posicaoCaracterAtual);
 
+                if(is_null($linha)) {
+                    $posicaoCaracterInicial++;
+                    if($posicaoCaracterInicial - $posicaoCaracterAtual !== 1) {
+                        $posicaoCaracterAtual--;
+                    }
+                }
+                else {
+                    $token = new Token(
+                        $this->getAutomato()->getTipoEntrada($pedacoEntrada),
+                        $pedacoEntrada,
+                        $linha->getPosicaoCaracterLinha($posicaoCaracterInicial),
+                        $linha->getPosicaoCaracterLinha($posicaoCaracterAtual),
+                        $linha->getNumeroLinha()
+                    );
+                }
+            } catch (Exception $ex) {
+                $caracterEntradaNaoPertenceAlfabeto = $ex->getCode() === TiposErrosAutomato::CARACTER_ENTRADA_NAO_PERTENCE_ALFABETO->value;
+                $transicaoInexistente  = $ex->getCode() === TiposErrosAutomato::TRANSICAO_INEXISTENTE_ESTADO_CARACTER_ATUAL->value;
+                $nenhumTokenEncontrado = is_null($token);
+
+                if($caracterEntradaNaoPertenceAlfabeto || ($posicaoCaracterAtual === $posicaoCaracterFinal && $nenhumTokenEncontrado)) {
+                    throw $ex;
+                }
+
+                if($transicaoInexistente && $nenhumTokenEncontrado) {
+                    $posicaoCaracterAtual = $posicaoCaracterInicial;
+                    $posicaoCaracterInicial++;
+                }
+                else if($transicaoInexistente) {
+                    $tokens[] = $token;
+                    $linhaToken = $controladorLinhas->getLinhaFromNumero($token->getLinha());
+                    if($linhaToken === null) {
+                        $teste = null;
+                    }
+                    $posicaoCaracterAtual = $linhaToken->getPosicaoCaracter($token->getPosicaoFinal());
+                    $posicaoCaracterInicial = $posicaoCaracterAtual + 1;
+                    $token = null;
                 }
             }
-        }
 
+            $posicaoCaracterAtual++;
+        } while ($posicaoCaracterAtual <= $posicaoCaracterFinal);
+        
+        $tokens[] = $token;
 
         return $tokens;
     }
 
     private static function getStringFromParteArray(array $array, int $posicaoInicial, int $posicaoFinal) : string
     {
+        $posicaoInicial--;
+        $posicaoFinal--;
         return implode(array_splice($array, $posicaoInicial, (($posicaoFinal + 1) - $posicaoInicial)));
     }
     
