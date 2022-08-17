@@ -111,17 +111,16 @@ try {
     $entrada = implode(PHP_EOL, [
         "x = 10",
         "WHILE (x > 0){",
+        "PRINT(x)",
+        "X = x - 1",
+        "}",
+        "IF (x == 0)",
+        "PRINT(0)"
     ]);
 
-    $entrada = "x = 10
-    WHILE (x > 0){
-       PRINT(x)
-       X = x - 1
+    foreach ($analisador->getTokensEntrada($entrada) as $token) {
+        echo "Token: {$token->getToken()} - Lexema: {$token->getLexema()} - Linha: {$token->getLinha()} - Posição Inicial: {$token->getPosicaoInicial()} - Posicao Final: {$token->getPosicaoFinal()} <br>";
     }
-    IF (x == 0)
-       PRINT(0)";
-
-    var_dump($analisador->getTokensEntrada($entrada));
 } catch (Exception $ex) {
     echo $ex->getMessage();
 } 

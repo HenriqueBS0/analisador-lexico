@@ -8,7 +8,7 @@ class Token {
     private int $posicaoFinal;
     private int $linha;
 
-    public function __construct(string $token, string $lexema, int $posicaoInicial, int $posicaoFinal, $linha) {
+    public function __construct(string $token, string $lexema, int $posicaoInicial, int $posicaoFinal, int $linha) {
         $this->token          = $token;
         $this->lexema         = $lexema;
         $this->posicaoInicial = $posicaoInicial;
