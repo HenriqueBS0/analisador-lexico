@@ -14,53 +14,6 @@ class AnalisadorLexico {
         return $this->automato;
     }
 
-    /**
-     * @param string $entrada
-     * @return 
-     */
-    public function getTokensEntradaBK(string $entrada) : array
-    {
-        $tokens = [];
-
-        $posicaoAtual = 0;
-        
-        $posicaoInicialLeitura = 0;
-
-        $ultimoTokenValidoEncontrado = null;
-
-        $linha = 1;
-
-        $caracteres = str_split($entrada);
-
-        for($posicao = $posicaoInicialLeitura; $posicao < count($caracteres); $posicao++) {
-
-            $caracterAtual = $caracteres[$posicao];
-
-            if($caracterAtual === PHP_EOL) {
-                $linha++;
-            }
-
-            $entrada = self::getStringFromParteArray($caracteres, $posicaoInicialLeitura, $posicao);
-
-            try {
-                $ultimoTokenValidoEncontrado = new Token(
-                    $this->getAutomato()->getEstadoFinal($entrada),
-                    $entrada,
-                    $posicaoInicialLeitura,
-                    $posicao,
-                    $linha
-                );
-            } catch (Exception $ex) {
-                if($ex->getCode()) {
-                    
-                }
-            }
-        }
-
-
-        return $tokens;
-    }
-
     public function getTokensEntrada(string $entrada) : array 
     {
 
