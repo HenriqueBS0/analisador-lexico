@@ -4,19 +4,22 @@ require_once 'AnalisadorLexico.php';
 
 $alfabeto = array_merge(Automato::getLetras(), Automato::getNumeros(), ['<', '>', '(', ')', '{', '}', '-', '+', '*', '/', '=', '!', ' ', PHP_EOL, '\r']);
 
-$estadoInicial= 'INICIO';
+$estadoInicial = 'INICIO';
 
 $estados = [
-    'INICIO', 'VARIAVEL', 'IF', 'FOR', 'PRINT', 'CONSTANTE', 'RECEBE', 'IGUALDADE', 'DESIGUALDADE',
+    'INICIO', 'VARIAVEL', 'IF', 'FOR', 'WHILE', 'PRINT', 'CONSTANTE', 'RECEBE', 'IGUALDADE', 'DESIGUALDADE',
     'MAIOR', 'MENOR', 'ABRE-PARENTESES', 'FECHA-PARENTESES', 'ABRE-CHAVES', 'FECHA-CHAVES', 'MENOS', 'MAIS', 'MULTIPLICA', 'DIVIDE',
-    'I-IF', 'F-FOR', 'O-FOR', 'P-PRINT', 'R-PRINT', 'I-PRINT', 'N-PRINT', '!-DESIGUALDADE'
+    'I-IF', 'F-FOR', 'O-FOR', 'P-PRINT', 'R-PRINT', 'I-PRINT', 'N-PRINT', '!-DESIGUALDADE',
+    'W-WHILE', 'H-WHILE', 'I-WHILE', 'L-WHILE'
 ];
 
 $delta = [
-    'INICIO' => array_merge([
+    'INICIO' => array_merge(
+        [
             'I' => 'I-IF',
             'F' => 'F-FOR',
             'P' => 'P-PRINT',
+            'W' => 'W-WHILE',
             '>' => 'MAIOR',
             '<' => 'MENOR',
             '(' => 'ABRE-PARENTESES',
@@ -29,43 +32,75 @@ $delta = [
             '/' => 'DIVIDE',
             '=' => 'RECEBE',
             '!' => '!-DESIGUALDADE'
-        ], 
+        ],
         Automato::getCarateresParaEstado(Automato::getNumeros(),                'CONSTANTE'),
-        Automato::getCarateresParaEstado(Automato::getLetras(['I', 'F', 'P']),  'VARIAVEL')
+        Automato::getCarateresParaEstado(Automato::getLetras(['I', 'F', 'P', 'W']),  'VARIAVEL')
     ),
-    'I-IF' => array_merge([
+    'I-IF' => array_merge(
+        [
             'F' => 'IF'
         ],
         Automato::getCarateresParaEstado(Automato::getLetras(['F']),  'VARIAVEL')
     ),
     'IF' => Automato::getCarateresParaEstado(array_merge(Automato::getNumeros(), Automato::getLetras()),  'VARIAVEL'),
-    'F-FOR' => array_merge([
+    'W-WHILE' => array_merge(
+        [
+            'H' => 'H-WHILE'
+        ],
+        Automato::getCarateresParaEstado(array_merge(Automato::getNumeros(), Automato::getLetras(['H'])),  'VARIAVEL')
+    ),
+    'H-WHILE' => array_merge(
+        [
+            'I' => 'I-WHILE'
+        ],
+        Automato::getCarateresParaEstado(array_merge(Automato::getNumeros(), Automato::getLetras(['I'])),  'VARIAVEL')
+    ),
+    'I-WHILE' => array_merge(
+        [
+            'L' => 'L-WHILE'
+        ],
+        Automato::getCarateresParaEstado(array_merge(Automato::getNumeros(), Automato::getLetras(['L'])),  'VARIAVEL')
+    ),
+    'L-WHILE' => array_merge(
+        [
+            'E' => 'WHILE'
+        ],
+        Automato::getCarateresParaEstado(array_merge(Automato::getNumeros(), Automato::getLetras(['E'])),  'VARIAVEL')
+    ),
+    'WHILE' => Automato::getCarateresParaEstado(array_merge(Automato::getNumeros(), Automato::getLetras()),  'VARIAVEL'),
+    'F-FOR' => array_merge(
+        [
             'O' => 'O-FOR'
         ],
         Automato::getCarateresParaEstado(array_merge(Automato::getNumeros(), Automato::getLetras(['O'])),  'VARIAVEL')
-    ), 
-    'O-FOR' => array_merge([
+    ),
+    'O-FOR' => array_merge(
+        [
             'R' => 'FOR'
         ],
         Automato::getCarateresParaEstado(array_merge(Automato::getNumeros(), Automato::getLetras(['R'])),  'VARIAVEL')
     ),
     'FOR' => Automato::getCarateresParaEstado(array_merge(Automato::getNumeros(), Automato::getLetras()),  'VARIAVEL'),
-    'P-PRINT' => array_merge([
+    'P-PRINT' => array_merge(
+        [
             'R' => 'R-PRINT'
         ],
         Automato::getCarateresParaEstado(array_merge(Automato::getNumeros(), Automato::getLetras(['R'])),  'VARIAVEL')
     ),
-    'R-PRINT' => array_merge([
+    'R-PRINT' => array_merge(
+        [
             'I' => 'I-PRINT'
         ],
         Automato::getCarateresParaEstado(array_merge(Automato::getNumeros(), Automato::getLetras(['I'])),  'VARIAVEL')
-    ), 
-    'I-PRINT' => array_merge([
+    ),
+    'I-PRINT' => array_merge(
+        [
             'N' => 'N-PRINT'
         ],
         Automato::getCarateresParaEstado(array_merge(Automato::getNumeros(), Automato::getLetras(['N'])),  'VARIAVEL')
     ),
-    'N-PRINT' => array_merge([
+    'N-PRINT' => array_merge(
+        [
             'T' => 'PRINT'
         ],
         Automato::getCarateresParaEstado(array_merge(Automato::getNumeros(), Automato::getLetras(['T'])),  'VARIAVEL')
@@ -88,6 +123,7 @@ $estadosFinais = [
     new EstadoFinal('VARIAVEL',         'Variável'),
     new EstadoFinal('IF',               'IF'),
     new EstadoFinal('FOR',              'FOR'),
+    new EstadoFinal('WHILE',            'WHILE'),
     new EstadoFinal('PRINT',            'PRINT'),
     new EstadoFinal('CONSTANTE',        'Constante'),
     new EstadoFinal('MAIOR',            'Maior'),
@@ -114,7 +150,7 @@ $retorno = (object) [
 try {
     $automato = new Automato($alfabeto, $estados, $estadoInicial, $estadosFinais, $delta);
     $analisador = new AnalisadorLexico($automato);
-    $retorno->conteudo = array_map(function(Token $token) {
+    $retorno->conteudo = array_map(function (Token $token) {
         return (object) [
             'token' => $token->getToken(),
             'lexema' => $token->getLexema(),
@@ -123,10 +159,9 @@ try {
             'posicaoFinal' => $token->getPosicaoFinal(),
         ];
     }, $analisador->getTokensEntrada(str_replace(["\r\n", "\r", "\n"], "\n", $_REQUEST['entrada'])));
-    
 } catch (Exception $ex) {
     $retorno->sucesso = false;
     $retorno->conteudo = $ex->getMessage();
-} 
+}
 
 echo json_encode($retorno);
