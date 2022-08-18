@@ -7,7 +7,7 @@ const carregarTokens = async entrada => {
     const tbody = document.getElementById('tbody-tokens');
     
     if(entrada == '') {
-        tbody.innerHTML = '';;
+        tbody.innerHTML = '';
         return;
     }
     

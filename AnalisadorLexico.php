@@ -47,7 +47,7 @@ class AnalisadorLexico {
                 $transicaoInexistente  = $ex->getCode() === TiposErrosAutomato::TRANSICAO_INEXISTENTE_ESTADO_CARACTER_ATUAL->value;
                 $nenhumTokenEncontrado = is_null($token);
 
-                if($caracterEntradaNaoPertenceAlfabeto || ($posicaoLeituraAtual === $posicaoLeituraFinal && $nenhumTokenEncontrado)) {
+                if($caracterEntradaNaoPertenceAlfabeto) {
                     throw $ex;
                 }
 
@@ -66,7 +66,10 @@ class AnalisadorLexico {
             }
         }
 
-        $tokens[] = $token;
+        if(!is_null($token)) {
+            $tokens[] = $token;
+        }
+        
         return $tokens;
     }
 
