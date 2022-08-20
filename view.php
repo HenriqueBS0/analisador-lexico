@@ -21,6 +21,11 @@
                 </div>
             </div>
             <div class="col">
+                <div class="alert alert-warning" role="alert">
+                    A simple warning alert—check it out!
+                </div>
+            </div>
+            <div class="col">
                 <table class="table table-hover">
                     <thead class="table-light">
                         <tr>

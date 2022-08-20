@@ -28,10 +28,9 @@ class AnalisadorLexico {
 
         for ($posicaoLeituraAtual=1; $posicaoLeituraAtual <= $posicaoLeituraFinal ; $posicaoLeituraAtual++) { 
             $parteEntrada = self::getStringFromParteArray($caracteres, $posicaoLeituraInicial, $posicaoLeituraAtual);
-            
-            try {
-                $posicao = self::getInformacoesPosicao($entrada, $posicaoLeituraInicial, $posicaoLeituraAtual);
+            $posicao = self::getInformacoesPosicao($entrada, $posicaoLeituraInicial, $posicaoLeituraAtual);
 
+            try {
                 $token = new Token(
                     $this->getAutomato()->getTipoEntrada($parteEntrada),
                     $parteEntrada,
@@ -48,7 +47,7 @@ class AnalisadorLexico {
                 $nenhumTokenEncontrado = is_null($token);
 
                 if($caracterEntradaNaoPertenceAlfabeto) {
-                    throw $ex;
+                    throw new Exception($ex->getMessage() . " Entrada: {$entrada}, Linha: {$posicao->linha}, Posição Inicial: {$posicao->posicaoInicial}, Posição Final: {$posicao->posicaoFinal}");
                 }
 
                 if($transicaoInexistente && $nenhumTokenEncontrado) {
